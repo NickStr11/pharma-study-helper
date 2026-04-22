@@ -1,0 +1,43 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+project_doc_max_bytes = 32768
+cli_auth_credentials_store = "file"
+developer_instructions = """
+For larger read-heavy, review-heavy, or debugging tasks, spawn the matching project-scoped custom agent instead of keeping all work in the parent thread.
+When the user asks for repo analysis, review, docs verification, browser debugging, or a bounded local fix, choose the matching custom agent without waiting for the exact agent name.
+Use repo_recon for codebase mapping, entrypoints, attack paths, and first-pass repo understanding.
+Use security_reviewer for audits, security checks, risky defaults, secret exposure, auth issues, and hardening review.
+Use docs_researcher for API verification, current docs checks, version-sensitive behavior, and external source confirmation.
+Use exa_researcher for fresh web research, implementation examples, source discovery, comparisons, and current external verification.
+Use notebooklm_summarizer for source-backed summaries of videos, articles, PDFs, or multi-source bundles when NotebookLM is available.
+Use browser_debugger for reproducing UI issues, gathering screenshots, console logs, and network evidence.
+Use targeted_fixer only after the failure mode is already understood and the change scope is small.
+Prefer subagents for read-heavy analysis, focused review, research, debugging evidence, and parallelizable exploration.
+When a task splits cleanly, fan out 2-3 subagents in parallel instead of serializing everything through the parent.
+Default bundles:
+- repo analysis or review: repo_recon + security_reviewer + docs_researcher
+- fresh external research: exa_researcher, then docs_researcher for official API confirmation when needed
+- browser bug with unclear cause: browser_debugger + repo_recon, then targeted_fixer after the failure mode is clear
+- source summary: notebooklm_summarizer, optionally paired with exa_researcher when source discovery is still needed
+Ask children to return concrete file references, evidence, or a minimal patch direction, then merge the result in the parent thread.
+Do not spawn subagents for trivial one-file edits, simple factual answers, or when the orchestration overhead is larger than the task.
+Stay as the parent orchestrator: merge findings, decide next actions, and keep the user-facing answer compact.
+"""
+
+[features]
+powershell_utf8 = true
+request_rule = true
+multi_agent = true
+
+[agents]
+max_threads = 6
+max_depth = 1
+job_max_runtime_seconds = 1800
+
+[sandbox_workspace_write]
+writable_roots = []
+network_access = true
+exclude_tmpdir_env_var = false
+exclude_slash_tmp = false

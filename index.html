@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacology Study Helper | Подготовка к экзамену</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">💊 Pharma Study</h1>
+                <div class="stats">
+                    <span class="stat-item">
+                        <span class="stat-label">Изучено:</span>
+                        <span class="stat-value" id="studiedCount">0</span>/<span id="totalCount">18</span>
+                    </span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <button class="btn-icon" id="keyboardHelp" title="Горячие клавиши (?)">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="2" y="6" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M5 10H7M9 10H11M13 10H15M6 13H14" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button class="btn-icon" id="darkModeToggle" title="Тёмная тема">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="icon-sun">
+                            <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
+                            <path
+                                d="M10 2V4M10 16V18M18 10H16M4 10H2M15.5 4.5L14 6M6 14L4.5 15.5M15.5 15.5L14 14M6 6L4.5 4.5"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="icon-moon"
+                            style="display:none">
+                            <path
+                                d="M17 10.5C17 14.6421 13.6421 18 9.5 18C6.39 18 3.74 16.13 2.6 13.45C3.57 13.8 4.62 14 5.5 14C10.19 14 14 10.19 14 5.5C14 4.62 13.8 3.57 13.45 2.6C16.13 3.74 18 6.39 18 9.5"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-mode="flashcards">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <rect x="3" y="5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M7 9H13M7 12H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    Карточки
+                </button>
+                <button class="nav-tab" data-mode="list">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    Список
+                </button>
+                <button class="nav-tab" data-mode="search">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="9" cy="9" r="5" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M13 13L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    Поиск
+                </button>
+                <button class="nav-tab" data-mode="ai-check">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3L12 8H17L13 11L14.5 16L10 13L5.5 16L7 11L3 8H8L10 3Z" stroke="currentColor"
+                            stroke-width="1.5" stroke-linejoin="round" />
+                    </svg>
+                    AI Проверка
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Flashcards Mode -->
+            <div class="mode-content active" id="flashcardsMode">
+                <div class="flashcard-controls">
+                    <button class="btn btn-secondary" id="randomBilet">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M14 4L14 8M14 4L10 4M14 4L9 9M4 14L4 10M4 14L8 14M4 14L9 9" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        Случайный билет
+                    </button>
+                    <div class="study-timer">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M9 5V9L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <span id="timerDisplay">00:00</span>
+                        <button class="btn-timer" id="timerToggle">▶</button>
+                    </div>
+                    <div class="filter-group">
+                        <label>Показывать:</label>
+                        <select id="filterType" class="select">
+                            <option value="all">Все билеты</option>
+                            <option value="unstudied">Неизученные</option>
+                            <option value="studied">Изученные</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Carousel Container -->
+                <div class="carousel-wrapper">
+                    <button class="carousel-nav carousel-nav-up" id="carouselUp">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+
+                    <div class="carousel-container" id="carouselContainer">
+                        <!-- Cards will be inserted here dynamically -->
+                    </div>
+
+                    <button class="carousel-nav carousel-nav-down" id="carouselDown">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- List Mode -->
+            <div class="mode-content" id="listMode">
+                <div class="list-header">
+                    <h2>Все билеты</h2>
+                    <div class="list-actions">
+                        <button class="btn btn-outline btn-sm" id="exportProgress">📥 Экспорт</button>
+                        <button class="btn btn-outline btn-sm" id="importProgress">📤 Импорт</button>
+                        <button class="btn btn-outline btn-sm" id="markAllStudied">Отметить все</button>
+                        <button class="btn btn-outline btn-sm" id="resetProgress">Сбросить</button>
+                    </div>
+                </div>
+                <div class="bilet-grid" id="biletGrid">
+                    <!-- Bilet cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Search Mode -->
+            <div class="mode-content" id="searchMode">
+                <div class="search-box">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="9" cy="9" r="5" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M13 13L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    <input type="text" id="searchInput"
+                        placeholder="Поиск по вопросам (например: антибиотики, ЛРС, диуретики...)">
+                    <button class="search-clear" id="searchClear" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-results" id="searchResults">
+                    <div class="empty-state">
+                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                            <circle cx="28" cy="28" r="18" stroke="currentColor" stroke-width="3" />
+                            <path d="M42 42L56 56" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        <p>Введите запрос для поиска по билетам</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Check Mode -->
+            <div class="mode-content" id="aiCheckMode">
+                <div class="ai-check-container">
+                    <div class="ai-check-header">
+                        <h2>AI Проверка ответа</h2>
+                        <p class="ai-check-description">Выберите билет и вопрос, напишите ответ, и AI проверит его
+                            корректность</p>
+                    </div>
+
+                    <div class="ai-check-controls">
+                        <div class="form-group">
+                            <label for="aiBiletSelect">Выберите билет:</label>
+                            <select id="aiBiletSelect" class="select">
+                                <!-- Options will be inserted here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="aiQuestionSelect">Выберите вопрос:</label>
+                            <select id="aiQuestionSelect" class="select">
+                                <option value="">Сначала выберите билет</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ai-check-question" id="aiCurrentQuestion">
+                        <p class="question-text">Выберите вопрос выше</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userAnswer">Ваш ответ:</label>
+                        <textarea id="userAnswer" class="textarea" rows="8"
+                            placeholder="Напишите ваш ответ здесь..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary btn-large" id="checkAnswer">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 3L12 8H17L13 11L14.5 16L10 13L5.5 16L7 11L3 8H8L10 3Z" stroke="currentColor"
+                                stroke-width="1.5" stroke-linejoin="round" />
+                        </svg>
+                        Проверить ответ с помощью AI
+                    </button>
+
+                    <div class="ai-result" id="aiResult" style="display: none;">
+                        <!-- AI response will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Pharmacology Study Helper | Экзамен 30.05.25</p>
+            <p class="footer-note">Данные сохраняются локально в вашем браузере</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
