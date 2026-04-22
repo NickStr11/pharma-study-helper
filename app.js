@@ -686,8 +686,15 @@ function renderMarkdown(text) {
             }
             continue;
         }
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
         const bullet = line.match(/^\s*[*\-]\s+(.*)$/);
         const numbered = line.match(/^\s*(\d+)[.)]\s+(.*)$/);
+        if (heading) {
+            closeList();
+            const level = Math.min(heading[1].length + 2, 6); // # → h3, ## → h4, etc (h1/h2 reserved for page)
+            out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+            continue;
+        }
         if (bullet) {
             if (listType !== 'ul') { closeList(); out.push('<ul>'); listType = 'ul'; }
             out.push(`<li>${inline(bullet[1])}</li>`);
