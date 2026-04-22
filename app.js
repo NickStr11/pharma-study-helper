@@ -649,6 +649,60 @@ function handleSearch(e) {
     }).join('');
 }
 
+// Minimal safe markdown renderer for AI output (bold, italic, bullets, numbered lists, code, line breaks)
+function renderMarkdown(text) {
+    const escape = (s) => s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const lines = text.split(/\r?\n/);
+    const out = [];
+    let listType = null; // 'ul' | 'ol' | null
+
+    const closeList = () => {
+        if (listType) {
+            out.push(`</${listType}>`);
+            listType = null;
+        }
+    };
+
+    const inline = (s) => escape(s)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?:;]|$)/g, '$1<em>$2</em>');
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trimEnd();
+        if (!line.trim()) {
+            // Peek next non-empty line — if it continues current list, don't close
+            const next = lines.slice(i + 1).find((l) => l.trim());
+            const nextIsList = next && (/^\s*[*\-]\s+/.test(next) || /^\s*\d+[.)]\s+/.test(next));
+            if (!nextIsList) {
+                closeList();
+                out.push('<br>');
+            }
+            continue;
+        }
+        const bullet = line.match(/^\s*[*\-]\s+(.*)$/);
+        const numbered = line.match(/^\s*(\d+)[.)]\s+(.*)$/);
+        if (bullet) {
+            if (listType !== 'ul') { closeList(); out.push('<ul>'); listType = 'ul'; }
+            out.push(`<li>${inline(bullet[1])}</li>`);
+        } else if (numbered) {
+            if (listType !== 'ol') { closeList(); out.push('<ol>'); listType = 'ol'; }
+            out.push(`<li value="${numbered[1]}">${inline(numbered[2])}</li>`);
+        } else {
+            closeList();
+            out.push(`<p>${inline(line)}</p>`);
+        }
+    }
+    closeList();
+    return out.join('');
+}
+
 // AI Check Mode Functions
 function getOpenRouterApiKey() {
     return localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY)?.trim() || '';
@@ -816,7 +870,7 @@ ${userAnswer}
                 </svg>
                 Результат проверки AI
             </div>
-            <div class="ai-result-content">${aiResponse.replace(/\n/g, '<br>')}</div>
+            <div class="ai-result-content">${renderMarkdown(aiResponse)}</div>
         `;
 
         // Scroll to result
