@@ -36,7 +36,8 @@ let carouselInitialized = false;
 let timerInterval = null;
 let timerSeconds = 0;
 let timerRunning = false;
-const GEMINI_API_KEY_STORAGE_KEY = 'pharma-gemini-api-key';
+const OPENROUTER_API_KEY_STORAGE_KEY = 'pharma-openrouter-api-key';
+const OPENROUTER_MODEL = 'google/gemini-3-flash-preview';
 
 // Load data and initialize app
 async function init() {
@@ -649,18 +650,18 @@ function handleSearch(e) {
 }
 
 // AI Check Mode Functions
-function getGeminiApiKey() {
-    return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim() || '';
+function getOpenRouterApiKey() {
+    return localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY)?.trim() || '';
 }
 
-function requestGeminiApiKey() {
-    const existingKey = getGeminiApiKey();
+function requestOpenRouterApiKey() {
+    const existingKey = getOpenRouterApiKey();
     if (existingKey) {
         return existingKey;
     }
 
     const providedKey = window.prompt(
-        'Введите Gemini API key. Ключ сохранится только в localStorage этого браузера.'
+        'Введите OpenRouter API key (sk-or-v1-...). Получить: https://openrouter.ai/keys\nКлюч сохранится только в localStorage этого браузера.'
     );
     const normalizedKey = providedKey ? providedKey.trim() : '';
 
@@ -668,7 +669,7 @@ function requestGeminiApiKey() {
         return '';
     }
 
-    localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, normalizedKey);
+    localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, normalizedKey);
     return normalizedKey;
 }
 
@@ -727,10 +728,13 @@ async function checkAnswerWithAI() {
 
     const bilet = biletsData.find(b => b.id === biletId);
     const question = bilet.questions[questionIndex];
-    const apiKey = requestGeminiApiKey();
+    const referenceAnswer = bilet.answers && bilet.answers[questionIndex]
+        ? bilet.answers[questionIndex].trim()
+        : '';
+    const apiKey = requestOpenRouterApiKey();
 
     if (!apiKey) {
-        alert('Без Gemini API key AI-проверка не запустится');
+        alert('Без OpenRouter API key AI-проверка не запустится');
         return;
     }
 
@@ -745,48 +749,63 @@ async function checkAnswerWithAI() {
     `;
 
     try {
-        // Call Gemini API
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        const systemPrompt = `Ты — преподаватель фармакологии. Твоя задача — проверить ответ студента, СВЕРЯЯ его с эталонным ответом из учебного материала.
+
+КРИТИЧЕСКИ ВАЖНО:
+- Опирайся ТОЛЬКО на эталонный ответ. Не придумывай факты из общих знаний.
+- Если эталонный ответ отсутствует — честно скажи "эталон для этого вопроса не добавлен, оценка ориентировочная" и дай оценку по общей фармакологической логике.
+- Никогда не выдумывай препараты, дозировки или классификации, которых нет в эталоне.
+
+Формат ответа:
+1. **Вердикт:** правильно / частично правильно / неправильно
+2. **Что совпадает с эталоном:** перечисли пункты
+3. **Что упущено:** чего нет в ответе студента но есть в эталоне
+4. **Что лишнее/неточное:** противоречия с эталоном
+5. **Итог:** короткий фидбек в 1-2 предложениях`;
+
+        const userPrompt = `ВОПРОС:
+${question}
+
+ЭТАЛОННЫЙ ОТВЕТ (из учебного материала):
+${referenceAnswer || '⚠️ Эталон не добавлен для этого вопроса'}
+
+ОТВЕТ СТУДЕНТА:
+${userAnswer}
+
+Проверь ответ студента СТРОГО ПО ЭТАЛОНУ выше.`;
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Pharma Study Helper',
             },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `Ты - преподаватель фармакологии. Проверь ответ студента на вопрос.
-
-Вопрос: ${question}
-
-Ответ студента: ${userAnswer}
-
-Оцени ответ по следующим критериям:
-1. Правильность и полнота ответа
-2. Точность терминологии
-3. Структурированность
-
-Дай краткую оценку (правильно/частично правильно/неправильно) и конструктивную обратную связь. Если ответ неполный, укажи, что нужно добавить.`
-                    }]
-                }]
+                model: OPENROUTER_MODEL,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                ],
+                temperature: 0.2,
             })
         });
 
         if (!response.ok) {
             if ([400, 401, 403].includes(response.status)) {
-                localStorage.removeItem(GEMINI_API_KEY_STORAGE_KEY);
+                localStorage.removeItem(OPENROUTER_API_KEY_STORAGE_KEY);
             }
 
-            throw new Error(`Gemini API request failed with status ${response.status}`);
+            const errorText = await response.text().catch(() => '');
+            throw new Error(`OpenRouter API failed (${response.status}): ${errorText.slice(0, 200)}`);
         }
 
         const data = await response.json();
-        const aiResponse = data?.candidates?.[0]?.content?.parts
-            ?.map(part => part.text || '')
-            .join('\n')
-            .trim();
+        const aiResponse = data?.choices?.[0]?.message?.content?.trim();
 
         if (!aiResponse) {
-            throw new Error('Gemini API returned an empty response');
+            throw new Error('OpenRouter API returned an empty response');
         }
 
         resultDiv.style.display = 'block';
