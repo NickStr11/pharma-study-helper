@@ -80,6 +80,9 @@ function updateStats() {
 
 // Event Listeners
 function setupEventListeners() {
+    // Inline AI-справка (выделение текста → кнопка "Объяснить")
+    setupInlineExplain();
+
     // Mode switching
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', () => switchMode(tab.dataset.mode));
@@ -1166,6 +1169,135 @@ function stopTimer() {
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
+    }
+}
+
+// ========== Inline AI-справка (выделил текст → объяснить) ==========
+const EXPLAIN_MODEL = 'google/gemini-2.5-flash';
+let explainSelectedText = '';
+let explainContext = '';
+
+function setupInlineExplain() {
+    const btn = document.getElementById('explainBtn');
+    const modal = document.getElementById('explainModal');
+    const closeBtn = document.getElementById('explainClose');
+    const backdrop = modal?.querySelector('.explain-modal-backdrop');
+    if (!btn || !modal) return;
+
+    document.addEventListener('mouseup', (e) => {
+        // Игнорируем если клик по самой кнопке
+        if (e.target.closest('#explainBtn') || e.target.closest('#explainModal')) return;
+        setTimeout(() => {
+            const sel = window.getSelection();
+            const text = sel ? sel.toString().trim() : '';
+            if (!text || text.length < 2 || text.length > 300) {
+                btn.hidden = true;
+                return;
+            }
+            // Проверяем что выделение внутри ответа или вопроса билета
+            const anchor = sel.anchorNode?.parentElement;
+            const inAnswer = anchor?.closest('.answer-content, .ai-result-content, .question-text, .search-result-question');
+            if (!inAnswer) {
+                btn.hidden = true;
+                return;
+            }
+            explainSelectedText = text;
+            // Контекст — текст всего ответа (для grounding)
+            const container = anchor.closest('.answer-content, .ai-result-content') || anchor.closest('.question-text');
+            explainContext = container ? container.innerText.slice(0, 2000) : '';
+            // Позиция кнопки — под последней точкой выделения
+            const range = sel.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            btn.style.top = `${Math.min(window.innerHeight - 60, rect.bottom + 8)}px`;
+            btn.style.left = `${Math.max(12, Math.min(window.innerWidth - 140, rect.left + rect.width / 2 - 60))}px`;
+            btn.hidden = false;
+        }, 10);
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        if (e.target.closest('#explainBtn')) return;
+        btn.hidden = true;
+    });
+
+    btn.addEventListener('click', () => {
+        btn.hidden = true;
+        openExplainModal(explainSelectedText, explainContext);
+    });
+
+    closeBtn?.addEventListener('click', closeExplainModal);
+    backdrop?.addEventListener('click', closeExplainModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.hidden) closeExplainModal();
+    });
+}
+
+function closeExplainModal() {
+    const modal = document.getElementById('explainModal');
+    if (modal) modal.hidden = true;
+}
+
+async function openExplainModal(term, context) {
+    const modal = document.getElementById('explainModal');
+    const title = document.getElementById('explainTitle');
+    const body = document.getElementById('explainBody');
+    if (!modal || !body) return;
+
+    title.textContent = `Справка: ${term.length > 80 ? term.slice(0, 80) + '…' : term}`;
+    body.innerHTML = '<div class="explain-loader"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    modal.hidden = false;
+
+    const apiKey = requestOpenRouterApiKey();
+    if (!apiKey) {
+        body.innerHTML = '<p>Без OpenRouter API key справка не работает.</p>';
+        return;
+    }
+
+    try {
+        const systemPrompt = `Ты — помощник студента-фармацевта. Пользователь выделил фрагмент из учебного ответа и просит кратко объяснить.
+
+Правила:
+- Ответ 3-6 предложений, простым языком.
+- Если выделен ПРЕПАРАТ (МНН или торговое) — укажи: группу, механизм в 1 строке, основные показания, 1-2 ключевые побочки/предостережения.
+- Если выделен ТЕРМИН — дай определение и короткий пример применения.
+- Если выделена ГРУППА препаратов — перечисли 2-3 ярких представителя и общий принцип действия.
+- Используй контекст вокруг выделения чтобы понять что именно имелось в виду.
+- Пиши на русском, без воды и без "Давай разберёмся".`;
+
+        const userPrompt = `Выделенный текст: "${term}"\n\nКонтекст (абзац откуда выделено):\n${context || '(контекст не передан)'}\n\nКоротко объясни.`;
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Pharma Study Helper',
+            },
+            body: JSON.stringify({
+                model: EXPLAIN_MODEL,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                ],
+                temperature: 0.3,
+            }),
+        });
+
+        if (!response.ok) {
+            if ([400, 401, 403].includes(response.status)) {
+                localStorage.removeItem(OPENROUTER_API_KEY_STORAGE_KEY);
+            }
+            throw new Error(`OpenRouter ${response.status}`);
+        }
+
+        const data = await response.json();
+        const text = data?.choices?.[0]?.message?.content?.trim();
+        if (!text) throw new Error('Пустой ответ от модели');
+
+        body.innerHTML = renderMarkdown(text);
+    } catch (err) {
+        console.error('Explain error:', err);
+        body.innerHTML = `<p>Не удалось получить справку: ${err.message}.<br>Проверь API key и соединение.</p>`;
     }
 }
 

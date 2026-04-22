@@ -244,6 +244,31 @@
         </div>
     </footer>
 
+    <!-- Inline AI-справка -->
+    <button id="explainBtn" class="explain-btn" hidden>
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM10 6v5M10 14v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Объяснить
+    </button>
+    <div id="explainModal" class="explain-modal" hidden>
+        <div class="explain-modal-backdrop"></div>
+        <div class="explain-modal-content">
+            <div class="explain-modal-header">
+                <h3 id="explainTitle">Справка</h3>
+                <button class="explain-close" id="explainClose" aria-label="Закрыть">×</button>
+            </div>
+            <div class="explain-modal-body" id="explainBody">
+                <div class="explain-loader">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+            </div>
+            <div class="explain-modal-footer">
+                <span class="explain-model">Gemini 2.5 Flash · OpenRouter</span>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 
