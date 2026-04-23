@@ -49,9 +49,10 @@ html.lenis body {
     --color-text-tertiary: #9A9FA5;
 
     /* Accent colors */
-    --color-primary: #2563EB;
-    --color-primary-hover: #1D4ED8;
-    --color-primary-light: rgba(37, 99, 235, 0.1);
+    --color-primary: #4F46E5;
+    --color-primary-hover: #7C3AED;
+    --color-primary-light: rgba(79, 70, 229, 0.1);
+    --gradient-primary: linear-gradient(135deg, #4F46E5, #7C3AED);
     --color-success: #10B981;
     --color-success-light: rgba(16, 185, 129, 0.1);
 
@@ -123,9 +124,10 @@ body.dark-mode {
     --color-text-secondary: #9A9FA5;
     --color-text-tertiary: #6C7275;
 
-    --color-primary: #4D9FFF;
-    --color-primary-hover: #6DB0FF;
-    --color-primary-light: rgba(77, 159, 255, 0.15);
+    --color-primary: #7C3AED;
+    --color-primary-hover: #A78BFA;
+    --color-primary-light: rgba(124, 58, 237, 0.2);
+    --gradient-primary: linear-gradient(135deg, #6366F1, #A78BFA);
     --color-success: #10B981;
     --color-success-light: rgba(16, 185, 129, 0.15);
 
@@ -256,7 +258,7 @@ body {
 }
 
 .nav-tab.active {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
     box-shadow: var(--shadow-sm);
 }
@@ -417,7 +419,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
 }
 
@@ -1074,12 +1076,12 @@ body {
 }
 
 .answer-toggle:hover {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
 }
 
 .answer-toggle.active {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
 }
 
@@ -1311,11 +1313,11 @@ body {
 }
 
 .carousel-nav:hover {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
+    background: var(--gradient-primary);
+    border-color: var(--color-primary-hover);
     color: white;
     transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(20, 110, 245, 0.3);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
 }
 
 .carousel-nav:active {
@@ -1527,12 +1529,12 @@ body {
 }
 
 .bilet-card-modal .answer-toggle:hover {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
 }
 
 .bilet-card-modal .answer-toggle.active {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: white;
 }
 
@@ -1728,14 +1730,14 @@ kbd {
 /* FAB кнопка открытия чата */
 .chat-fab {
     position: fixed;
-    right: 24px;
+    left: 24px;
     bottom: 24px;
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     border: none;
     color: #fff;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: var(--gradient-primary);
     box-shadow: 0 8px 24px rgba(79, 70, 229, 0.45);
     cursor: pointer;
     z-index: 9995;
@@ -1927,5 +1929,5 @@ kbd {
 
 @media (max-width: 500px) {
     .chat-panel { width: 100vw; }
-    .chat-fab { right: 16px; bottom: 16px; }
+    .chat-fab { left: 16px; bottom: 16px; }
 }
