@@ -38,6 +38,27 @@ let timerSeconds = 0;
 let timerRunning = false;
 const OPENROUTER_API_KEY_STORAGE_KEY = 'pharma-openrouter-api-key';
 const OPENROUTER_MODEL = 'google/gemini-3-flash-preview';
+// Если задан прокси — сайт не спрашивает ключ у пользователя, а пропускает запросы через Cloudflare Worker.
+// Оставить '' чтобы вернуться к режиму "каждый вводит свой ключ".
+const OPENROUTER_PROXY_URL = '';
+
+function getOpenRouterEndpoint() {
+    return OPENROUTER_PROXY_URL || 'https://openrouter.ai/api/v1/chat/completions';
+}
+
+function getOpenRouterAuthHeaders(apiKey) {
+    if (OPENROUTER_PROXY_URL) return {};
+    return {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Pharma Study Helper',
+    };
+}
+
+function ensureOpenRouterKey() {
+    if (OPENROUTER_PROXY_URL) return 'via-proxy';
+    return requestOpenRouterApiKey();
+}
 
 // Load data and initialize app
 async function init() {
@@ -795,7 +816,7 @@ async function checkAnswerWithAI() {
     const referenceAnswer = bilet.answers && bilet.answers[questionIndex]
         ? bilet.answers[questionIndex].trim()
         : '';
-    const apiKey = requestOpenRouterApiKey();
+    const apiKey = ensureOpenRouterKey();
 
     if (!apiKey) {
         alert('Без OpenRouter API key AI-проверка не запустится');
@@ -838,13 +859,11 @@ ${userAnswer}
 
 Проверь ответ студента СТРОГО ПО ЭТАЛОНУ выше.`;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch(getOpenRouterEndpoint(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'Pharma Study Helper',
+                ...getOpenRouterAuthHeaders(apiKey),
             },
             body: JSON.stringify({
                 model: OPENROUTER_MODEL,
@@ -1339,7 +1358,7 @@ async function sendChatMessage(text, opts = {}) {
     appendChatMessage('user', text, opts);
     chatHistory.push({ role: 'user', content: text });
 
-    const apiKey = requestOpenRouterApiKey();
+    const apiKey = ensureOpenRouterKey();
     if (!apiKey) {
         appendChatMessage('error', 'Без OpenRouter API key чат не работает. Получить ключ: https://openrouter.ai/keys');
         chatHistory.pop();
@@ -1352,13 +1371,11 @@ async function sendChatMessage(text, opts = {}) {
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch(getOpenRouterEndpoint(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'Pharma Study Helper - Chat',
+                ...getOpenRouterAuthHeaders(apiKey),
             },
             body: JSON.stringify({
                 model: CHAT_MODEL,
