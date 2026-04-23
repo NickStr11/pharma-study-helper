@@ -1172,21 +1172,33 @@ function stopTimer() {
     }
 }
 
-// ========== Inline AI-справка (выделил текст → объяснить) ==========
-const EXPLAIN_MODEL = 'google/gemini-2.5-flash';
-let explainSelectedText = '';
-let explainContext = '';
+// ========== Боковая панель-помощник + inline "Спросить у помощника" ==========
+const CHAT_MODEL = 'google/gemini-2.5-flash';
+const CHAT_SYSTEM = `Ты — помощник студента-фармацевта. Отвечай на вопросы по фармакологии кратко, ясно, простым языком.
+
+Правила:
+- 3-7 предложений в типичном ответе; длиннее только если тема требует.
+- Препарат (МНН/торговое) → группа, механизм, основные показания, 1-2 ключевые побочки.
+- Термин → определение + короткий пример.
+- Группа → 2-3 ярких представителя и общий принцип.
+- Используй **жирное** для ключевых слов и маркированные списки для перечней.
+- Если пользователь задаёт уточнение — учитывай предыдущие сообщения.
+- Русский язык, без "Давай разберёмся", без образных аналогий про солдат/замки/кирпичи.`;
+
+let chatHistory = [];
+let chatBusy = false;
 
 function setupInlineExplain() {
+    setupChatPanel();
+    setupSelectionTrigger();
+}
+
+function setupSelectionTrigger() {
     const btn = document.getElementById('explainBtn');
-    const modal = document.getElementById('explainModal');
-    const closeBtn = document.getElementById('explainClose');
-    const backdrop = modal?.querySelector('.explain-modal-backdrop');
-    if (!btn || !modal) return;
+    if (!btn) return;
 
     document.addEventListener('mouseup', (e) => {
-        // Игнорируем если клик по самой кнопке
-        if (e.target.closest('#explainBtn') || e.target.closest('#explainModal')) return;
+        if (e.target.closest('#explainBtn') || e.target.closest('#chatPanel')) return;
         setTimeout(() => {
             const sel = window.getSelection();
             const text = sel ? sel.toString().trim() : '';
@@ -1194,22 +1206,19 @@ function setupInlineExplain() {
                 btn.hidden = true;
                 return;
             }
-            // Проверяем что выделение внутри ответа или вопроса билета
             const anchor = sel.anchorNode?.parentElement;
             const inAnswer = anchor?.closest('.answer-content, .ai-result-content, .question-text, .search-result-question');
             if (!inAnswer) {
                 btn.hidden = true;
                 return;
             }
-            explainSelectedText = text;
-            // Контекст — текст всего ответа (для grounding)
+            btn.dataset.term = text;
             const container = anchor.closest('.answer-content, .ai-result-content') || anchor.closest('.question-text');
-            explainContext = container ? container.innerText.slice(0, 2000) : '';
-            // Позиция кнопки — под последней точкой выделения
+            btn.dataset.context = container ? container.innerText.slice(0, 2000) : '';
             const range = sel.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             btn.style.top = `${Math.min(window.innerHeight - 60, rect.bottom + 8)}px`;
-            btn.style.left = `${Math.max(12, Math.min(window.innerWidth - 140, rect.left + rect.width / 2 - 60))}px`;
+            btn.style.left = `${Math.max(12, Math.min(window.innerWidth - 200, rect.left + rect.width / 2 - 100))}px`;
             btn.hidden = false;
         }, 10);
     });
@@ -1220,64 +1229,142 @@ function setupInlineExplain() {
     });
 
     btn.addEventListener('click', () => {
+        const term = btn.dataset.term || '';
+        const context = btn.dataset.context || '';
         btn.hidden = true;
-        openExplainModal(explainSelectedText, explainContext);
+        openChatPanel();
+        const prompt = context
+            ? `Объясни: "${term}".\n\nКонтекст (откуда выделено):\n${context}`
+            : `Объясни: "${term}"`;
+        sendChatMessage(prompt, { displayAs: `Объясни: "${term}"` });
     });
+}
 
-    closeBtn?.addEventListener('click', closeExplainModal);
-    backdrop?.addEventListener('click', closeExplainModal);
+function setupChatPanel() {
+    const toggle = document.getElementById('chatToggle');
+    const panel = document.getElementById('chatPanel');
+    const closeBtn = document.getElementById('chatClose');
+    const backdrop = document.getElementById('chatBackdrop');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
+    if (!panel || !form || !input) return;
+
+    toggle?.addEventListener('click', openChatPanel);
+    closeBtn?.addEventListener('click', closeChatPanel);
+    backdrop?.addEventListener('click', closeChatPanel);
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.hidden) closeExplainModal();
+        if (e.key === 'Escape' && panel.classList.contains('open')) closeChatPanel();
+    });
+
+    input.addEventListener('input', () => {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text || chatBusy) return;
+        input.value = '';
+        input.style.height = 'auto';
+        sendChatMessage(text);
     });
 }
 
-function closeExplainModal() {
-    const modal = document.getElementById('explainModal');
-    if (modal) modal.hidden = true;
+function openChatPanel() {
+    const panel = document.getElementById('chatPanel');
+    const backdrop = document.getElementById('chatBackdrop');
+    const fab = document.getElementById('chatToggle');
+    if (!panel) return;
+    panel.classList.add('open');
+    if (backdrop) { backdrop.hidden = false; requestAnimationFrame(() => backdrop.classList.add('open')); }
+    fab?.classList.add('hidden');
+    setTimeout(() => document.getElementById('chatInput')?.focus(), 250);
 }
 
-async function openExplainModal(term, context) {
-    const modal = document.getElementById('explainModal');
-    const title = document.getElementById('explainTitle');
-    const body = document.getElementById('explainBody');
-    if (!modal || !body) return;
+function closeChatPanel() {
+    const panel = document.getElementById('chatPanel');
+    const backdrop = document.getElementById('chatBackdrop');
+    const fab = document.getElementById('chatToggle');
+    if (!panel) return;
+    panel.classList.remove('open');
+    backdrop?.classList.remove('open');
+    fab?.classList.remove('hidden');
+    // Очищаем историю при закрытии
+    chatHistory = [];
+    const messages = document.getElementById('chatMessages');
+    if (messages) {
+        messages.innerHTML = `
+            <div class="chat-hint">
+                <p>Задавай вопросы по материалу билетов или любым фармакологическим терминам. Можно выделить текст в ответе — появится кнопка «Спросить у помощника».</p>
+                <p class="chat-hint-note">История сбросится когда закроешь окно.</p>
+            </div>`;
+    }
+    setTimeout(() => { if (backdrop) backdrop.hidden = true; }, 300);
+}
 
-    title.textContent = `Справка: ${term.length > 80 ? term.slice(0, 80) + '…' : term}`;
-    body.innerHTML = '<div class="explain-loader"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
-    modal.hidden = false;
+function appendChatMessage(role, content, opts = {}) {
+    const messages = document.getElementById('chatMessages');
+    if (!messages) return null;
+    // Убираем hint при первом сообщении
+    messages.querySelector('.chat-hint')?.remove();
+    const el = document.createElement('div');
+    el.className = `chat-msg ${role}`;
+    if (role === 'user') {
+        el.textContent = opts.displayAs || content;
+    } else if (role === 'assistant') {
+        el.innerHTML = renderMarkdown(content);
+    } else if (role === 'typing') {
+        el.className = 'chat-msg assistant';
+        el.innerHTML = '<div class="chat-typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    } else if (role === 'error') {
+        el.className = 'chat-msg assistant error';
+        el.textContent = content;
+    }
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+}
+
+async function sendChatMessage(text, opts = {}) {
+    if (chatBusy) return;
+    chatBusy = true;
+
+    appendChatMessage('user', text, opts);
+    chatHistory.push({ role: 'user', content: text });
 
     const apiKey = requestOpenRouterApiKey();
     if (!apiKey) {
-        body.innerHTML = '<p>Без OpenRouter API key справка не работает.</p>';
+        appendChatMessage('error', 'Без OpenRouter API key чат не работает. Получить ключ: https://openrouter.ai/keys');
+        chatHistory.pop();
+        chatBusy = false;
         return;
     }
 
+    const typingEl = appendChatMessage('typing', '');
+    const sendBtn = document.querySelector('.chat-send');
+    if (sendBtn) sendBtn.disabled = true;
+
     try {
-        const systemPrompt = `Ты — помощник студента-фармацевта. Пользователь выделил фрагмент из учебного ответа и просит кратко объяснить.
-
-Правила:
-- Ответ 3-6 предложений, простым языком.
-- Если выделен ПРЕПАРАТ (МНН или торговое) — укажи: группу, механизм в 1 строке, основные показания, 1-2 ключевые побочки/предостережения.
-- Если выделен ТЕРМИН — дай определение и короткий пример применения.
-- Если выделена ГРУППА препаратов — перечисли 2-3 ярких представителя и общий принцип действия.
-- Используй контекст вокруг выделения чтобы понять что именно имелось в виду.
-- Пиши на русском, без воды и без "Давай разберёмся".`;
-
-        const userPrompt = `Выделенный текст: "${term}"\n\nКонтекст (абзац откуда выделено):\n${context || '(контекст не передан)'}\n\nКоротко объясни.`;
-
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`,
                 'HTTP-Referer': window.location.origin,
-                'X-Title': 'Pharma Study Helper',
+                'X-Title': 'Pharma Study Helper - Chat',
             },
             body: JSON.stringify({
-                model: EXPLAIN_MODEL,
+                model: CHAT_MODEL,
                 messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt },
+                    { role: 'system', content: CHAT_SYSTEM },
+                    ...chatHistory,
                 ],
                 temperature: 0.3,
             }),
@@ -1287,17 +1374,25 @@ async function openExplainModal(term, context) {
             if ([400, 401, 403].includes(response.status)) {
                 localStorage.removeItem(OPENROUTER_API_KEY_STORAGE_KEY);
             }
-            throw new Error(`OpenRouter ${response.status}`);
+            const errText = await response.text().catch(() => '');
+            throw new Error(`OpenRouter ${response.status}: ${errText.slice(0, 120)}`);
         }
 
         const data = await response.json();
-        const text = data?.choices?.[0]?.message?.content?.trim();
-        if (!text) throw new Error('Пустой ответ от модели');
+        const reply = data?.choices?.[0]?.message?.content?.trim();
+        if (!reply) throw new Error('Пустой ответ от модели');
 
-        body.innerHTML = renderMarkdown(text);
+        typingEl?.remove();
+        appendChatMessage('assistant', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
     } catch (err) {
-        console.error('Explain error:', err);
-        body.innerHTML = `<p>Не удалось получить справку: ${err.message}.<br>Проверь API key и соединение.</p>`;
+        console.error('Chat error:', err);
+        typingEl?.remove();
+        appendChatMessage('error', `Не удалось получить ответ: ${err.message}`);
+        chatHistory.pop();
+    } finally {
+        chatBusy = false;
+        if (sendBtn) sendBtn.disabled = false;
     }
 }
 
