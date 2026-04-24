@@ -469,9 +469,11 @@ function openBiletWithAnimation(biletId) {
 
     document.body.appendChild(modal);
 
-    // Set initial state (invisible, small)
+    // Set initial state (invisible, small). На мобиле модалка full-screen — transform другой.
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const centerTf = isMobile ? '' : 'translate(-50%, -50%) ';
     modal.style.opacity = '0';
-    modal.style.transform = 'translate(-50%, -50%) scale(0.8)';
+    modal.style.transform = `${centerTf}scale(0.92)`;
 
     // Animate in
     requestAnimationFrame(() => {
@@ -479,7 +481,7 @@ function openBiletWithAnimation(biletId) {
 
         requestAnimationFrame(() => {
             modal.style.opacity = '1';
-            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+            modal.style.transform = `${centerTf}scale(1)`;
         });
     });
 
@@ -503,8 +505,9 @@ function closeCardModal(modal, backdrop) {
     modal.style.transition = 'opacity 0.15s cubic-bezier(0.4, 0, 1, 1), transform 0.15s cubic-bezier(0.4, 0, 1, 1)';
     backdrop.style.transition = 'opacity 0.12s ease-out';
 
+    const isMobileClose = window.matchMedia('(max-width: 640px)').matches;
     modal.style.opacity = '0';
-    modal.style.transform = 'translate(-50%, -50%) scale(0.95)';
+    modal.style.transform = `${isMobileClose ? '' : 'translate(-50%, -50%) '}scale(0.95)`;
     backdrop.style.opacity = '0';
 
     setTimeout(() => {

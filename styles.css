@@ -2003,7 +2003,9 @@ kbd {
     #checkAnswer { width: 100%; padding: 12px; font-size: 14px; }
 
     /* Поиск */
-    .search-box input { font-size: 15px; padding: 10px 38px 10px 14px; }
+    .search-box input { font-size: 15px; padding: 11px 44px 11px 44px; }
+    .search-box svg { left: 14px; }
+    .search-clear { right: 8px; width: 28px; height: 28px; }
     .search-result-card { padding: 12px; }
 
     /* Футер */
