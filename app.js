@@ -695,13 +695,11 @@ function renderMarkdown(text) {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trimEnd();
         if (!line.trim()) {
-            // Peek next non-empty line — if it continues current list, don't close
+            // Пустая строка: закрываем список если следующий блок не его продолжение.
+            // НЕ вставляем <br> — отступы между блоками формируются через CSS margin.
             const next = lines.slice(i + 1).find((l) => l.trim());
             const nextIsList = next && (/^\s*[*\-]\s+/.test(next) || /^\s*\d+[.)]\s+/.test(next));
-            if (!nextIsList) {
-                closeList();
-                out.push('<br>');
-            }
+            if (!nextIsList) closeList();
             continue;
         }
         const heading = line.match(/^(#{1,6})\s+(.*)$/);

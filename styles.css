@@ -1253,7 +1253,7 @@ body {
 .answer-content > *:last-child { margin-bottom: 0 !important; }
 
 .answer-content p {
-    margin: 0 0 0.7em;
+    margin: 0 0 0.55em;
 }
 
 .answer-content strong {
@@ -1268,28 +1268,28 @@ body {
 .answer-content h4,
 .answer-content h5,
 .answer-content h6 {
-    margin: 1.2em 0 0.5em;
+    margin: 0.85em 0 0.25em;
     font-weight: 700;
     color: var(--color-text);
     letter-spacing: -0.01em;
     line-height: 1.3;
 }
 
-.answer-content h3 { font-size: 17px; }
+.answer-content h3 { font-size: 16.5px; }
 .answer-content h4 { font-size: 15px; }
-.answer-content h5, .answer-content h6 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
+.answer-content h5, .answer-content h6 { font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
 
 .answer-content ul,
 .answer-content ol {
-    margin: 0.5em 0 0.9em;
-    padding-left: 26px;
+    margin: 0.3em 0 0.6em;
+    padding-left: 24px;
 }
 
 .answer-content ul { list-style: disc; }
 .answer-content ol { list-style: decimal; }
 
 .answer-content li {
-    margin-bottom: 0.35em;
+    margin-bottom: 0.2em;
     padding-left: 4px;
 }
 
