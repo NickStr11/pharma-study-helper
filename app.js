@@ -285,20 +285,9 @@ function showBilet(index) {
 
 // Format answer text with basic markdown-like formatting
 function formatAnswer(text) {
-    if (!text) return '<p>Ответ пока не добавлен</p>';
-
-    // Convert **text** to <strong>text</strong>
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Convert line breaks to paragraphs
-    const paragraphs = text.split('\n\n').map(p => {
-        if (p.trim()) {
-            return `<p>${p.replace(/\n/g, '<br>')}</p>`;
-        }
-        return '';
-    }).join('');
-
-    return paragraphs || text;
+    if (!text) return '<p class="no-answer">Ответ пока не добавлен</p>';
+    // Используем полный markdown-рендер (поддерживает **bold**, *italic*, * bullets, 1. numbered, ### headings, `code`, HTML-escape)
+    return renderMarkdown(text);
 }
 
 // toggleAnswer is now defined at the bottom of file as window.toggleAnswer
@@ -716,12 +705,18 @@ function renderMarkdown(text) {
             continue;
         }
         const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        const boldOnly = line.match(/^\*\*([^*]+)\*\*:?\s*$/); // строка "**Заголовок**" или "**Заголовок:**" — подзаголовок
         const bullet = line.match(/^\s*[*\-]\s+(.*)$/);
         const numbered = line.match(/^\s*(\d+)[.)]\s+(.*)$/);
         if (heading) {
             closeList();
             const level = Math.min(heading[1].length + 2, 6); // # → h3, ## → h4, etc (h1/h2 reserved for page)
             out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+            continue;
+        }
+        if (boldOnly) {
+            closeList();
+            out.push(`<h4>${escape(boldOnly[1])}</h4>`);
             continue;
         }
         if (bullet) {
