@@ -1931,3 +1931,119 @@ kbd {
     .chat-panel { width: 100vw; }
     .chat-fab { left: 16px; bottom: 16px; }
 }
+
+/* ========== Mobile polish ========== */
+@media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+
+    .container { padding: 0 12px; }
+
+    .header { padding: 10px 0; }
+    .header-content { gap: 10px; padding: 0; }
+    .logo { font-size: 18px; letter-spacing: -0.01em; }
+    .stats { flex-wrap: wrap; gap: 8px; width: 100%; }
+    .stat-item { font-size: 12px; }
+    .progress-bar { flex: 1; min-width: 100px; }
+
+    .nav { padding: 8px 0; }
+    .nav-tabs { width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { padding: 8px 14px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+    .nav-tab svg { width: 16px; height: 16px; }
+
+    .mode-content { padding: 16px 0; }
+    h2, .section-title { font-size: 20px; }
+    h3 { font-size: 16px; }
+
+    /* Карточки билетов в списке */
+    .bilet-card { padding: 14px; border-radius: 12px; }
+    .bilet-card h3, .bilet-number { font-size: 15px; }
+    .bilet-card .question-text { font-size: 13.5px; line-height: 1.5; }
+
+    /* Модалка билета — на весь экран почти */
+    .bilet-card-modal {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        top: 0; left: 0;
+        transform: none;
+        border-radius: 0;
+        padding: 16px 14px 80px;
+    }
+    .bilet-card-modal::-webkit-scrollbar { width: 0; }
+    .modal-close-btn {
+        top: 10px !important;
+        right: 10px !important;
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    /* Ответы внутри модалки/карточек */
+    .answer-content {
+        padding: 12px;
+        font-size: 14px;
+        line-height: 1.6;
+        border-left-width: 3px;
+    }
+    .answer-content ul, .answer-content ol { padding-left: 20px; }
+    .answer-toggle { padding: 7px 14px; font-size: 13px; }
+
+    /* Карусель */
+    .carousel-container { height: auto; min-height: 420px; padding: 10px 0; }
+    .carousel-nav { width: 40px; height: 40px; }
+    .carousel-nav svg { width: 18px; height: 18px; }
+    .flashcard-carousel.prev,
+    .flashcard-carousel.next { display: none; }
+
+    /* AI-проверка — форма */
+    .ai-check-controls { gap: 10px; }
+    .ai-result-content { font-size: 14px; padding: 12px; }
+    #userAnswer { font-size: 14px; min-height: 120px; }
+    #checkAnswer { width: 100%; padding: 12px; font-size: 14px; }
+
+    /* Поиск */
+    .search-box input { font-size: 15px; padding: 10px 38px 10px 14px; }
+    .search-result-card { padding: 12px; }
+
+    /* Футер */
+    .footer { padding: 16px 0; font-size: 12px; text-align: center; }
+    .footer-note { font-size: 11px; }
+
+    /* Inline-кнопка "Спросить у помощника" — не вылезает за экран */
+    .explain-btn { font-size: 12px; padding: 7px 12px; max-width: calc(100vw - 24px); }
+    .explain-btn svg { width: 14px; height: 14px; }
+
+    /* FAB — учёт safe-area iPhone */
+    .chat-fab {
+        left: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        width: 48px;
+        height: 48px;
+    }
+
+    /* Чат-панель на весь экран, учёт safe-area */
+    .chat-panel { width: 100vw; }
+    .chat-header { padding: 14px 16px 12px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+    .chat-messages { padding: 14px; }
+    .chat-input-form {
+        padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .chat-input { font-size: 16px; /* против zoom'а на iOS */ }
+    .chat-msg { font-size: 13.5px; padding: 9px 12px; }
+}
+
+/* Узкий телефон / портрет */
+@media (max-width: 380px) {
+    .logo { font-size: 16px; }
+    .stat-item { font-size: 11px; }
+    .nav-tab { padding: 7px 11px; font-size: 12px; }
+    .bilet-card { padding: 12px; }
+    .chat-fab { width: 44px; height: 44px; }
+}
+
+/* Landscape телефона — короткая высота */
+@media (max-height: 500px) and (max-width: 900px) {
+    .carousel-container { min-height: 340px; }
+    .chat-panel { width: min(420px, 70vw); }
+}
