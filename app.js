@@ -92,11 +92,13 @@ function loadProgress() {
 function updateStats() {
     const studiedCount = studiedBilets.size;
     const totalCount = biletsData.length;
-    const percentage = (studiedCount / totalCount) * 100;
+    const percentage = totalCount ? (studiedCount / totalCount) * 100 : 0;
 
     document.getElementById('studiedCount').textContent = studiedCount;
     document.getElementById('totalCount').textContent = totalCount;
     document.getElementById('progressFill').style.width = `${percentage}%`;
+    const pct = document.getElementById('progressPercent');
+    if (pct) pct.textContent = `${Math.round(percentage)}%`;
 }
 
 // Event Listeners

@@ -20,14 +20,22 @@
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <h1 class="logo">💊 Pharma Study</h1>
+                <div class="brand">
+                    <h1 class="logo">💊 Pharma Study</h1>
+                    <span class="brand-sub">Экзамен · 30.05.25</span>
+                </div>
                 <div class="stats">
                     <span class="stat-item">
-                        <span class="stat-label">Изучено:</span>
-                        <span class="stat-value" id="studiedCount">0</span>/<span id="totalCount">18</span>
+                        <span class="stat-value" id="studiedCount">0</span>
+                        <span class="stat-sep">/</span>
+                        <span class="stat-total" id="totalCount">18</span>
+                        <span class="stat-label">изучено</span>
                     </span>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-wrap">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-percent" id="progressPercent">0%</span>
                     </div>
                     <button class="btn-icon" id="keyboardHelp" title="Горячие клавиши (?)">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
