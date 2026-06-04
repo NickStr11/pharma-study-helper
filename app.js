@@ -290,6 +290,54 @@ function formatAnswer(text) {
     return renderMarkdown(text);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderQuizSection(bilet, context = 'carousel') {
+    if (!Array.isArray(bilet.quiz) || !bilet.quiz.length) return '';
+
+    const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+    return `
+        <section class="bilet-quiz-section" id="${context}-quiz-section-${bilet.id}">
+            <div class="quiz-section-header">
+                <div>
+                    <span class="quiz-kicker">Самопроверка</span>
+                    <h3>Тест по билету</h3>
+                </div>
+                <button class="quiz-reset" type="button" onclick="resetQuiz(${bilet.id}, '${context}')">
+                    Сбросить
+                </button>
+            </div>
+            <div class="quiz-grid">
+                ${bilet.quiz.map((item, quizIndex) => `
+                    <article class="quiz-card" id="${context}-quiz-${bilet.id}-${quizIndex}" data-correct="${item.answer}">
+                        <div class="quiz-question-row">
+                            <span class="quiz-number">${quizIndex + 1}</span>
+                            <h4>${escapeHtml(item.question)}</h4>
+                        </div>
+                        <div class="quiz-options">
+                            ${item.options.map((option, optionIndex) => `
+                                <button class="quiz-option" type="button" onclick="answerQuiz(${bilet.id}, ${quizIndex}, ${optionIndex}, '${context}')">
+                                    <span class="quiz-option-letter">${optionLetters[optionIndex] || optionIndex + 1}</span>
+                                    <span>${escapeHtml(option)}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div class="quiz-feedback" hidden></div>
+                    </article>
+                `).join('')}
+            </div>
+        </section>
+    `;
+}
+
 // toggleAnswer is now defined at the bottom of file as window.toggleAnswer
 
 function navigateBilet(direction) {
@@ -453,6 +501,7 @@ function openBiletWithAnimation(biletId) {
                     </div>
                 </div>
             `).join('')}
+            ${renderQuizSection(bilet, 'modal')}
         </div>
     `;
 
@@ -1008,6 +1057,7 @@ function renderCarouselCards() {
                     `;
     }).join('')}
             </div>
+            ${renderQuizSection(currentBilet, 'carousel')}
         </div>
     `;
 }
@@ -1086,6 +1136,53 @@ window.toggleAnswer = function (biletIndex, questionIndex) {
         `;
         button.classList.add('active');
     }
+};
+
+window.answerQuiz = function (biletId, quizIndex, optionIndex, context = 'carousel') {
+    const bilet = biletsData.find(b => b.id === biletId);
+    const item = bilet?.quiz?.[quizIndex];
+    const card = document.getElementById(`${context}-quiz-${biletId}-${quizIndex}`);
+
+    if (!item || !card || card.classList.contains('answered')) return;
+
+    const correctIndex = Number(item.answer);
+    const isCorrect = optionIndex === correctIndex;
+    const options = [...card.querySelectorAll('.quiz-option')];
+
+    card.classList.add('answered', isCorrect ? 'is-correct' : 'is-wrong');
+    options.forEach((option, index) => {
+        option.disabled = true;
+        if (index === correctIndex) option.classList.add('correct');
+        if (index === optionIndex && !isCorrect) option.classList.add('wrong');
+    });
+
+    const feedback = card.querySelector('.quiz-feedback');
+    if (feedback) {
+        feedback.hidden = false;
+        feedback.innerHTML = `
+            <strong>${isCorrect ? 'Верно.' : 'Неверно.'}</strong>
+            ${renderMarkdown(item.explanation || '')}
+        `;
+    }
+};
+
+window.resetQuiz = function (biletId, context = 'carousel') {
+    const section = document.getElementById(`${context}-quiz-section-${biletId}`);
+    if (!section) return;
+
+    section.querySelectorAll('.quiz-card').forEach(card => {
+        card.classList.remove('answered', 'is-correct', 'is-wrong');
+        card.querySelectorAll('.quiz-option').forEach(option => {
+            option.disabled = false;
+            option.classList.remove('correct', 'wrong');
+        });
+
+        const feedback = card.querySelector('.quiz-feedback');
+        if (feedback) {
+            feedback.hidden = true;
+            feedback.innerHTML = '';
+        }
+    });
 };
 
 // Show Keyboard Shortcuts Help

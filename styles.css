@@ -1327,6 +1327,198 @@ body {
 .answer-content br + h3,
 .answer-content br + h4 { margin-top: 0.2em; }
 
+/* Ticket Quiz */
+.bilet-quiz-section {
+    margin-top: var(--spacing-lg);
+    padding: 18px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.quiz-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: 16px;
+}
+
+.quiz-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.quiz-section-header h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 20px;
+    line-height: 1.25;
+}
+
+.quiz-reset {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quiz-reset:hover {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.quiz-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.quiz-card {
+    padding: 14px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quiz-card.is-correct {
+    border-color: rgba(16, 185, 129, 0.55);
+}
+
+.quiz-card.is-wrong {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.quiz-question-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 12px;
+}
+
+.quiz-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.quiz-question-row h4 {
+    margin: 2px 0 0;
+    color: var(--color-text);
+    font-size: 15px;
+    line-height: 1.45;
+    letter-spacing: 0;
+}
+
+.quiz-options {
+    display: grid;
+    gap: 8px;
+}
+
+.quiz-option {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 12px;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.quiz-option:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    transform: translateY(-1px);
+}
+
+.quiz-option:disabled {
+    cursor: default;
+}
+
+.quiz-option.correct {
+    border-color: rgba(16, 185, 129, 0.8);
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.quiz-option.wrong {
+    border-color: rgba(239, 68, 68, 0.75);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.quiz-option-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.quiz-option.correct .quiz-option-letter {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.quiz-option.wrong .quiz-option-letter {
+    background: #ef4444;
+    color: #fff;
+}
+
+.quiz-feedback {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.quiz-feedback strong {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.quiz-feedback p {
+    display: inline;
+    margin: 0;
+}
+
 .answer-actions {
     display: flex;
     gap: var(--spacing-xs);
