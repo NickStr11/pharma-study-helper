@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT
 
-Updated: 2026-03-17
+Updated: 2026-06-04
 
 ## Project
 
@@ -21,8 +21,9 @@ pharma-study-helper
 ## Current direction
 
 - Миграция из старого `D:\code\2026\1\pharma-study-helper` завершена в новый standalone repo.
-- Дальше вся работа идёт только в `D:\code\2026\3\pharma-study-helper`.
+- Дальше вся работа идёт только в фактическом клоне `D:\code\3\pharma-study-helper`.
 - Следующий смысловой трек: ревизия ответов в `bilets-data.json` против PDF и черновых полных ответов.
+- 2026-06-04: билет 16 обновлен под скрин пользователя, добавлен интерактивный тест; изменения запушены на GitHub Pages.
 
 ## Constraints
 
