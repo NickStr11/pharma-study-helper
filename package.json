@@ -1,0 +1,21 @@
+{
+  "name": "pharma-study-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone repo для старого проекта по билетам по фармакологии.",
+  "scripts": {
+    "playwright:version": "playwright --version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NickStr11/pharma-study-helper.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/NickStr11/pharma-study-helper/issues"
+  },
+  "homepage": "https://github.com/NickStr11/pharma-study-helper#readme",
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}
